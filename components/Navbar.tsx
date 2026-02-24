@@ -25,28 +25,49 @@ export default function Navbar() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.refresh();
+    router.push("/login");
   };
 
   return (
-    <nav className="bg-amber-800 p-4 text-white shadow-md">
-      <div className="max-w-4xl mx-auto flex justify-between items-center">
-        <Link href="/" className="font-bold text-xl hover:text-amber-200">
+    <nav className="bg-amber-900 p-4 shadow-lg text-white sticky top-0 z-50 border-b border-amber-800">
+      <div className="max-w-6xl mx-auto flex justify-between items-center">
+        
+        {/* Logo / Domů */}
+        <Link href="/" className="text-2xl font-black flex items-center gap-2 hover:text-amber-200 transition tracking-tight">
           🍺 Hodnocení Piv
         </Link>
 
-        <div className="flex gap-4 items-center">
+        <div>
           {user ? (
-            <>
-              <span className="text-sm hidden sm:inline">{user.email}</span>
-              <button onClick={handleLogout} className="bg-red-600 px-3 py-1 rounded text-sm hover:bg-red-700 transition">
+            <div className="flex items-center gap-4">
+              <span className="text-sm hidden sm:inline text-amber-200 font-medium opacity-90">
+                {user.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm border border-red-700"
+              >
                 Odhlásit
               </button>
-            </>
+            </div>
           ) : (
-            <>
-              <Link href="/login" className="hover:text-amber-200 transition">Přihlásit</Link>
-              <Link href="/signup" className="bg-white text-amber-900 px-3 py-1 rounded text-sm font-bold hover:bg-gray-100 transition">Registrace</Link>
-            </>
+            <div className="flex gap-3">
+              {/* TLAČÍTKO PŘIHLÁSIT - Nyní stejně velké jako registrace */}
+              <Link 
+                href="/login" 
+                className="px-4 py-2 rounded-lg font-bold transition border border-amber-500 hover:bg-amber-800 hover:text-amber-100 flex items-center"
+              >
+                Přihlásit se
+              </Link>
+
+              {/* TLAČÍTKO REGISTROVAT */}
+              <Link 
+                href="/signup" 
+                className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 px-4 py-2 rounded-lg font-bold transition shadow-md flex items-center"
+              >
+                Registrovat
+              </Link>
+            </div>
           )}
         </div>
       </div>
