@@ -2,16 +2,17 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-export default function Login() {
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -19,49 +20,70 @@ export default function Login() {
     });
 
     if (error) {
-      setError(error.message);
+      alert("Chyba: " + error.message);
     } else {
-      router.push("/"); // Přesměrovat na hlavní stránku
-      router.refresh(); // Obnovit, aby se načetla lišta
+      router.push("/");
+      router.refresh();
     }
+    setLoading(false);
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-50">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-sm">
-        <h1 className="text-2xl font-bold mb-6 text-center text-amber-800">Přihlášení</h1>
-        
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+    // TADY JE ZMĚNA: Elegantní tmavší gradient (Amber -> Orange -> Dark)
+    <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-amber-400 via-orange-500 to-amber-900">
+      
+      {/* Karta s formulářem - bez bublinek, čistý design */}
+      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-orange-200">
+        <div className="text-center mb-8">
+          <div className="text-5xl mb-4">🍻</div>
+          <h1 className="text-3xl font-extrabold text-gray-900">Vítej zpátky!</h1>
+          <p className="text-gray-500 mt-2">Přihlas se do svého pivního deníku.</p>
+        </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all"
+              placeholder="tvuj@email.cz"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Heslo</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Heslo</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all"
+              placeholder="******"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-amber-600 text-white py-2 px-4 rounded hover:bg-amber-700 transition"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold py-3.5 rounded-xl hover:from-amber-700 hover:to-orange-700 transition shadow-lg disabled:opacity-70"
           >
-            Přihlásit se
+            {loading ? "Přihlašuji..." : "Přihlásit se"}
           </button>
         </form>
+
+        <div className="mt-8 text-center space-y-4">
+          <p className="text-gray-600">
+            Ještě nemáš účet?{" "}
+            <Link href="/signup" className="text-amber-700 font-bold hover:underline">
+              Zaregistruj se zdarma
+            </Link>
+          </p>
+          <Link href="/" className="block text-sm text-gray-400 hover:text-gray-600 transition">
+            ← Zpět na hlavní stránku
+          </Link>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
