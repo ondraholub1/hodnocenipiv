@@ -5,80 +5,95 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function ReviewForm({ beerId }: { beerId: number }) {
+  const [user, setUser] = useState<any>(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
-      setCheckingAuth(false);
     };
     getUser();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setLoading(true);
 
-    const { error } = await supabase
-      .from("reviews")
-      .insert([{ beer_id: beerId, user_id: user.id, rating: rating, comment: comment }]);
+    const { error } = await supabase.from("reviews").insert({
+      beer_id: beerId,
+      user_id: user.id,
+      rating,
+      comment,
+    });
 
+    setLoading(false);
     if (error) {
-      alert("Chyba při ukládání: " + error.message);
+      alert("Chyba: " + error.message);
     } else {
       setComment("");
+      setRating(5);
       router.refresh();
     }
-    setLoading(false);
   };
 
-  if (checkingAuth) return <p className="mt-8 text-amber-700 font-bold animate-pulse">Načítám formulář...</p>;
-
+  // 1. STAV PRO NEPŘIHLÁŠENÉ (Nenápadný tmavý box)
   if (!user) {
     return (
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-8 rounded-2xl border border-amber-200 mt-8 text-center shadow-sm">
-        <p className="text-amber-900 mb-4 font-bold text-lg">Pro napsání recenze se musíš přihlásit.</p>
-        <Link href="/login" className="inline-block bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-3 rounded-xl hover:from-amber-600 hover:to-orange-600 transition shadow-md hover:shadow-lg">
+      <div className="bg-gray-900/40 p-8 rounded-2xl border border-gray-800 text-center shadow-inner mt-8 backdrop-blur-sm">
+        <p className="text-gray-500 text-lg font-medium mb-5">Pro napsání recenze se musíš přihlásit.</p>
+        <Link 
+          href="/login" 
+          className="inline-block bg-gray-800 hover:bg-gray-700 text-amber-500/80 hover:text-amber-400 border border-gray-700 hover:border-amber-500/50 px-6 py-2.5 rounded-xl font-bold transition-all shadow-sm"
+        >
           Přejít na přihlášení
         </Link>
       </div>
     );
   }
 
+  // 2. STAV PRO PŘIHLÁŠENÉ (Temný formulář pro recenzi)
   return (
-    <form onSubmit={handleSubmit} className="bg-gradient-to-br from-gray-50 to-amber-50/30 p-8 rounded-2xl border border-orange-100 shadow-inner mt-8">
-      <h3 className="text-2xl font-extrabold mb-6 text-amber-900">Napsat recenzi <span className="text-sm font-normal text-gray-500 block mt-1">(Přihlášen jako: {user.email})</span></h3>
+    <form onSubmit={handleSubmit} className="bg-gray-800/50 p-6 sm:p-8 rounded-2xl border border-gray-700 shadow-xl mt-8 backdrop-blur-sm">
+      <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-orange-500 mb-6 drop-shadow-sm">
+        Přidat hodnocení
+      </h3>
       
-      <div className="mb-6">
-        <label className="block text-sm font-bold mb-3 text-gray-700 uppercase tracking-wide">Hodnocení (hvězdičky)</label>
-        <div className="flex gap-2 bg-white inline-flex p-2 rounded-xl border border-gray-200 shadow-sm">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star} type="button" onClick={() => setRating(star)}
-              className={`text-3xl transition-all transform hover:scale-110 ${star <= rating ? "grayscale-0 drop-shadow-md" : "grayscale opacity-30"}`}
-            >
-              ⭐
-            </button>
-          ))}
-        </div>
+      <div className="mb-5">
+        <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wide">Hodnocení</label>
+        <select
+          value={rating}
+          onChange={(e) => setRating(Number(e.target.value))}
+          className="w-full p-3 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all appearance-none cursor-pointer"
+        >
+          <option value={5}>⭐⭐⭐⭐⭐ (5/5) - Skvělé</option>
+          <option value={4}>⭐⭐⭐⭐ (4/5) - Velmi dobré</option>
+          <option value={3}>⭐⭐⭐ (3/5) - Průměrné</option>
+          <option value={2}>⭐⭐ (2/5) - Podprůměrné</option>
+          <option value={1}>⭐ (1/5) - Špatné</option>
+        </select>
       </div>
-      
+
       <div className="mb-6">
-        <label className="block text-sm font-bold mb-3 text-gray-700 uppercase tracking-wide">Tvůj komentář</label>
+        <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wide">Tvoje recenze</label>
         <textarea
-          value={comment} onChange={(e) => setComment(e.target.value)} required
-          className="w-full p-4 border border-gray-300 rounded-xl h-32 focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all shadow-sm resize-none" 
-          placeholder="Jak ti toto pivo chutnalo? Doporučil bys ho?"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl text-gray-200 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all min-h-[120px] placeholder-gray-600"
+          placeholder="Jak ti pivo chutnalo? Zkus popsat hořkost, pěnu..."
+          required
         />
       </div>
-      
-      <button type="submit" disabled={loading} className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-8 py-3 rounded-xl hover:from-amber-600 hover:to-orange-600 transition shadow-md hover:shadow-lg disabled:opacity-50">
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold py-3.5 rounded-xl hover:from-amber-400 hover:to-orange-500 transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] disabled:opacity-70"
+      >
         {loading ? "Odesílám..." : "Odeslat recenzi"}
       </button>
     </form>

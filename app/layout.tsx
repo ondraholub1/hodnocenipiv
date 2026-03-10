@@ -1,34 +1,21 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "../components/Navbar"; // 1. Importujeme Navigaci
+import Navbar from "../components/Navbar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
+export const metadata = {
   title: "Hodnocení Piv",
-  description: "Aplikace pro hodnocení piv vytvořená v Next.js",
+  description: "Nejlepší aplikace pro hodnocení craftových piv",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="cs">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Navbar /> {/* 2. Vložíme Navigaci nad obsah stránky */}
+      {/* ZDE JE ZMĚNA: bg-black zaručí, že pod skleněnou lištou bude tma */}
+      <body className="bg-black text-gray-200 min-h-screen flex flex-col">
+        <Navbar />
         {children}
       </body>
     </html>
